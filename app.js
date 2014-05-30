@@ -4,7 +4,10 @@ $(document).ready( function() {
 		$('.results').html('');
 		// get the value of the tags the user submitted
 		var tags = $(this).find("input[name='tags']").val();
+		var tag = $(this).find("input[name='answerers']").val();
+
 		getUnanswered(tags);
+		getAnswerers(tag);
 	});
 });
 
@@ -37,6 +40,30 @@ var showQuestion = function(question) {
 							'</p>' +
  							'<p>Reputation: ' + question.owner.reputation + '</p>'
 	);
+
+	return result;
+};
+
+// this function takes the object returned by StackOverflow
+// and creates new result to be appended to the DOM
+
+var showAnswerers = function(top_answerers) {
+
+	//clone our result template code
+	var result = $('.templates .question').clone();
+
+	// Set the answerers properties in result
+	var answerElement = result.find('answer-name a');
+	answerElement.attr('href', top_answerers.link);
+	answerElement.text(top_answerers.display_name);
+
+	// Set the post count in result
+	var post-count = result.find('.post-count');
+	post-count.attr(top_answerers.post_count);
+
+	// set the score in result
+	var scores = result.find('.score');
+	scores.attr(top_answerers.score);
 
 	return result;
 };
@@ -83,6 +110,32 @@ var getUnanswered = function(tags) {
 		});
 	})
 	.fail(function(jqXHR, error, errorThrown){
+		var errorElem = showError(error);
+		$('.search-results').append(errorElem);
+	});
+};
+
+var getAnswerers = function(tag) {
+
+	// the parameters we need to pass in with our request to StackOverFlow's API
+	var answr_rqst = {site: 'stackoverflow'};
+	var urls = "http://api.stackexchange.com/2.2/tags/" + tag + "/top-answerers/month";
+
+	var result = $.ajax({
+		url: urls,
+		data: answr_rqst,
+		dataType: "jsonp",
+		type: "GET",
+	}).done(function(result){
+		var searchResults = showSearchResults(tag, result.items.length);
+
+		$('.search-results').html(searchResults);
+
+		$.each(result.items, function(index, item) {
+			var answerers = showAnswerers(item);
+			$('.results').append(answerers);
+		});
+	}).fail(function(jqXHR, error, errorThrown){
 		var errorElem = showError(error);
 		$('.search-results').append(errorElem);
 	});
