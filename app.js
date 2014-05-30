@@ -4,10 +4,16 @@ $(document).ready( function() {
 		$('.results').html('');
 		// get the value of the tags the user submitted
 		var tags = $(this).find("input[name='tags']").val();
+		
+		getUnanswered(tags);
+	});
+
+	$('.inspiration-getter').submit(function(event){
+		$('.results').html('');
+
 		var tag = $(this).find("input[name='answerers']").val();
 
-		getUnanswered(tags);
-		getAnswerers(tag);
+		getInspiration(tag);
 	});
 });
 
@@ -40,34 +46,32 @@ var showQuestion = function(question) {
 							'</p>' +
  							'<p>Reputation: ' + question.owner.reputation + '</p>'
 	);
-
 	return result;
 };
 
 // this function takes the object returned by StackOverflow
 // and creates new result to be appended to the DOM
 
-var showAnswerers = function(top_answerers) {
+var showInspiration = function(idols) {
 
 	//clone our result template code
-	var result = $('.templates .question').clone();
+	var result = $('.templates .answerers').clone();
 
 	// Set the answerers properties in result
-	var answerElement = result.find('answer-name a');
-	answerElement.attr('href', top_answerers.link);
-	answerElement.text(top_answerers.display_name);
+	result.find('.idol-name a')
+		.attr('href', idols.user.link)
+		.text(idols.user.display_name);
 
 	// Set the post count in result
-	var post-count = result.find('.post-count');
-	post-count.attr(top_answerers.post_count);
+	result.find('.post-count')
+		.text(idols.post_count);
 
 	// set the score in result
-	var scores = result.find('.score');
-	scores.attr(top_answerers.score);
+	result.find('.score')
+		.text(idols.score);
 
 	return result;
 };
-
 
 // this function takes the results object from StackOverflow
 // and creates info about search results to be appended to DOM
@@ -115,29 +119,30 @@ var getUnanswered = function(tags) {
 	});
 };
 
-var getAnswerers = function(tag) {
+var getInspiration = function(tag) {
 
 	// the parameters we need to pass in with our request to StackOverFlow's API
 	var answr_rqst = {site: 'stackoverflow'};
-	var urls = "http://api.stackexchange.com/2.2/tags/" + tag + "/top-answerers/month";
+	var urls = "http://api.stackexchange.com/2.2/tags/" + tag + "/top-answerers/all_time";
 
 	var result = $.ajax({
 		url: urls,
 		data: answr_rqst,
 		dataType: "jsonp",
 		type: "GET",
-	}).done(function(result){
+	})
+	.done(function(result){
 		var searchResults = showSearchResults(tag, result.items.length);
 
 		$('.search-results').html(searchResults);
 
 		$.each(result.items, function(index, item) {
-			var answerers = showAnswerers(item);
-			$('.results').append(answerers);
+			var inspiration = showInspiration(item);
+			$('.results').append(inspiration);
 		});
-	}).fail(function(jqXHR, error, errorThrown){
-		var errorElem = showError(error);
-		$('.search-results').append(errorElem);
+	})
+	.fail(function() {
+		alert("There's a problem");
 	});
 };
 
